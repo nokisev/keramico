@@ -10,21 +10,25 @@ import (
 
 func SetupRoutes(r *gin.Engine, db *sql.DB) {
 
-	r.POST("/register", func(c *gin.Context) {
+	r.POST("/api/register", func(c *gin.Context) {
 		handlers.Register(c, db)
 	})
-	r.POST("/login", func(c *gin.Context) {
+	r.POST("/api/login", func(c *gin.Context) {
 		handlers.Login(c, db)
 	})
 
-	r.GET("/products", func(c *gin.Context) {
+	r.GET("/api/products", func(c *gin.Context) {
 		handlers.GetProducts(c, db)
+	})
+
+	r.GET("/api/products/:id", func(c *gin.Context) {
+		handlers.GetProductById(c, db)
 	})
 
 	auth := r.Group("/")
 	auth.Use(middleware.AuthMiddleware())
 	{
-		r.POST("/products", func(c *gin.Context) {
+		r.POST("/api/products", func(c *gin.Context) {
 			handlers.CreateProduct(c, db)
 		})
 	}
