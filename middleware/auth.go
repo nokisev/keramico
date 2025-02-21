@@ -1,14 +1,16 @@
 package middleware
 
 import (
+	"alice/keramico/internal/redis"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(redisClient *redis.RedisClient) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		authHeader := c.GetHeader("Authorization")
@@ -38,6 +40,15 @@ func AuthMiddleware() gin.HandlerFunc {
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			c.Abort()
+			return
+		}
+
+		userID := strconv.Itoa(int(claims["user_id"].(float64)))
+
+		storedToken, err := redisClient.GetToken(userID)
+		if err != nil || storedToken != tokenString {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token not found in Redis"})
 			c.Abort()
 			return
 		}

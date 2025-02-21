@@ -2,19 +2,20 @@ package routes
 
 import (
 	"alice/keramico/handlers"
+	"alice/keramico/internal/redis"
 	"alice/keramico/middleware"
 	"database/sql"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRoutes(r *gin.Engine, db *sql.DB) {
+func SetupRoutes(r *gin.Engine, db *sql.DB, redisClient *redis.RedisClient) {
 
 	r.POST("/api/register", func(c *gin.Context) {
 		handlers.Register(c, db)
 	})
 	r.POST("/api/login", func(c *gin.Context) {
-		handlers.Login(c, db)
+		handlers.Login(c, db, redisClient)
 	})
 
 	r.GET("/api/products", func(c *gin.Context) {
@@ -26,7 +27,7 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 	})
 
 	auth := r.Group("/")
-	auth.Use(middleware.AuthMiddleware())
+	auth.Use(middleware.AuthMiddleware(redisClient))
 	{
 		r.POST("/api/products", func(c *gin.Context) {
 			handlers.CreateProduct(c, db)

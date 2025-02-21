@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"alice/keramico/internal/redis"
 	"alice/keramico/models"
 	"database/sql"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,7 +46,7 @@ func Register(c *gin.Context, db *sql.DB) {
 	c.JSON(http.StatusCreated, user)
 }
 
-func Login(c *gin.Context, db *sql.DB) {
+func Login(c *gin.Context, db *sql.DB, redisClient *redis.RedisClient) {
 	var input struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -88,6 +90,11 @@ func Login(c *gin.Context, db *sql.DB) {
 	tokenString, err := token.SignedString([]byte("secret123"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+	err = redisClient.StoreToken(strconv.Itoa(user.ID), tokenString)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to store token in Redis"})
 		return
 	}
 
