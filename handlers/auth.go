@@ -4,6 +4,7 @@ import (
 	"alice/keramico/internal/redis"
 	"alice/keramico/models"
 	"database/sql"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -22,7 +23,7 @@ func Register(c *gin.Context, db *sql.DB) {
 	}
 
 	// Хеширование пароля
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(strings.TrimSpace(user.Password)), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.MinCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
@@ -30,9 +31,9 @@ func Register(c *gin.Context, db *sql.DB) {
 
 	// Сохранение в БД
 	result, err := db.Exec("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)",
-		strings.TrimSpace(user.Username),
-		strings.TrimSpace(user.Email),
-		hashedPassword, // Убрано явное преобразование в строку
+		user.Username,
+		user.Email,
+		string(hashedPassword), // Убрано явное преобразование в строку
 		"user",
 	)
 	if err != nil {
@@ -76,6 +77,8 @@ func Login(c *gin.Context, db *sql.DB, redisClient *redis.RedisClient) {
 
 	// Сравнение пароля
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), plainPass); err != nil {
+		log.Println(plainPass)
+		log.Println([]byte(user.Password))
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
