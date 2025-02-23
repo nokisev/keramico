@@ -10,3 +10,10 @@ type User struct {
 	Role      string    `json:"role"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type Profile struct {
+	UserID   int    `json:"user_id"`
+	FullName string `json:"fullname"`
+	Avatar   string `json:"avatar"`
+	Bio      string `json:"bio"`
+}

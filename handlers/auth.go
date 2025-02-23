@@ -31,7 +31,7 @@ func generateJWT(userID int, role string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userID,
 		"role":    role,
-		"exp":     time.Now().Add(time.Minute * 2).Unix(),
+		"exp":     time.Now().Add(time.Minute * 30).Unix(),
 	})
 	return token.SignedString([]byte(secret))
 }
@@ -50,20 +50,44 @@ func Register(c *gin.Context, db *sql.DB) {
 		return
 	}
 
-	// Сохранение в БД
-	result, err := db.Exec("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)",
+	tx, err := db.Begin()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to start transaction"})
+		return
+	}
+	defer tx.Rollback()
+	result, err := tx.Exec("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)",
 		user.Username,
 		user.Email,
-		string(hashedPassword), // Убрано явное преобразование в строку
+		string(hashedPassword),
 		"user",
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error: " + err.Error()})
 		return
 	}
+	userID, err := result.LastInsertId()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user ID"})
+		return
+	}
+	_, err = tx.Exec("INSERT INTO profiles (user_id, fullname, avatar, bio) VALUES (?, ?, ?, ?)",
+		userID,
+		user.Username,
+		"",
+		"",
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create profile: " + err.Error()})
+		return
+	}
 
-	id, _ := result.LastInsertId()
-	user.ID = int(id)
+	if err := tx.Commit(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to commit transaction"})
+		return
+	}
+
+	user.ID = int(userID)
 	user.Password = "" // Не возвращаем пароль
 	c.JSON(http.StatusCreated, user)
 }
