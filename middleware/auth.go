@@ -21,8 +21,8 @@ func AuthMiddleware(redisClient *redis.RedisClient) gin.HandlerFunc {
 		}
 
 		tokenString := strings.Split(authHeader, " ")[1]
-		if tokenString == " " {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token is required"})
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token not found in Redis"})
 			c.Abort()
 			return
 		}

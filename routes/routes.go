@@ -29,8 +29,11 @@ func SetupRoutes(r *gin.Engine, db *sql.DB, redisClient *redis.RedisClient) {
 	auth := r.Group("/")
 	auth.Use(middleware.AuthMiddleware(redisClient))
 	{
-		r.POST("/api/products", func(c *gin.Context) {
+		auth.POST("/api/products", func(c *gin.Context) {
 			handlers.CreateProduct(c, db)
+		})
+		auth.POST("/api/logout", func(c *gin.Context) {
+			handlers.Logout(c, redisClient)
 		})
 	}
 

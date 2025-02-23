@@ -30,7 +30,7 @@ func NewRedisClient(addr string, password string, db int) *RedisClient {
 }
 
 func (r *RedisClient) StoreToken(userID string, token string) error {
-	return r.Client.Set(r.ctx, userID, token, 24*time.Hour).Err()
+	return r.Client.Set(r.ctx, userID, token, 2*time.Minute).Err()
 }
 
 func (r *RedisClient) GetToken(userID string) (string, error) {
@@ -38,7 +38,11 @@ func (r *RedisClient) GetToken(userID string) (string, error) {
 }
 
 func (r *RedisClient) DeleteToken(userID string) error {
-	return r.Client.Del(r.ctx, userID).Err()
+	res := r.Client.Del(r.ctx, userID)
+	if res != nil {
+		return res.Err()
+	}
+	return nil
 }
 
 func (r *RedisClient) Close() error {
