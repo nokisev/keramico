@@ -26,7 +26,7 @@ func SetupRoutes(r *gin.Engine, db *sql.DB, redisClient *redis.RedisClient) {
 		handlers.GetProductById(c, db)
 	})
 
-	r.GET("/api/profile", func(c *gin.Context) {
+	r.GET("/api/profile/:id", func(c *gin.Context) {
 		handlers.GetProfile(c, db)
 	})
 
@@ -39,7 +39,7 @@ func SetupRoutes(r *gin.Engine, db *sql.DB, redisClient *redis.RedisClient) {
 		auth.POST("/api/logout", func(c *gin.Context) {
 			handlers.Logout(c, redisClient)
 		})
-		auth.PUT("/api/profile", func(c *gin.Context) {
+		auth.PUT("/api/profile/:id", func(c *gin.Context) {
 			handlers.UpdateProfile(c, db)
 		})
 	}
