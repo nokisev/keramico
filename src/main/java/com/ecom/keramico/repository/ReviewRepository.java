@@ -1,14 +1,13 @@
 package com.ecom.keramico.repository;
 
-import com.ecom.keramico.model.Category;
 import com.ecom.keramico.model.Product;
+import com.ecom.keramico.model.Review;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
-    List<Product> findAllByName(String name);
-    List<Product> findAllByCategory(Category category);
+public interface ReviewRepository extends JpaRepository<Review, Long> {
+    List<Review> findReviewByProductId(Product product);
 }

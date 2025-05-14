@@ -1,6 +1,8 @@
 package com.ecom.keramico.service;
 
+import com.ecom.keramico.model.Category;
 import com.ecom.keramico.model.Product;
+import com.ecom.keramico.repository.CategoryRepository;
 import com.ecom.keramico.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,8 @@ public class ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
@@ -26,7 +30,7 @@ public class ProductService {
     }
 
     public List<Product> getAllProductsByCategory(String category) {
-        return productRepository.findAllByCategory(category);
+        return productRepository.findAllByCategory(categoryRepository.findByName(category));
     }
 
     public List<Product> getProductByName(String name) {
@@ -34,6 +38,7 @@ public class ProductService {
     }
 
     public Product createProduct(Product product) {
+        categoryRepository.save(product.getCategory());
         return productRepository.save(product);
     }
 
